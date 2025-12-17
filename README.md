@@ -1,76 +1,132 @@
-Here is the same content, only cleaned formatting, no wording changes, and no extra lines added:
-
-⸻
-
-How to Run This Project Locally
-
+Movie Recommendation App
+A full-stack MERN application that provides AI-powered movie recommendations using OpenRouter API.
+Features
+•	AI-powered movie recommendations based on user preferences
+•	Customizable number of suggestions (1-10 movies)
+•	PostgreSQL database to store recommendation history
+•	Clean and simple UI
+•	RESTful API with Express.js
+Tech Stack
+Frontend: React, JavaScript, CSS Backend: Node.js, Express.js Database: PostgreSQL AI API: OpenRouter (GPT-4o-mini)
+Project Structure
+movie-recommender/
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   └── .env
+└── frontend/
+    ├── src/
+    │   ├── App.js
+    │   └── index.js
+    ├── public/
+    │   └── index.html
+    └── package.json
 Prerequisites
-
-Make sure the following are installed on your system:
-	•	Node.js (v18 or later recommended)
-	•	npm
-	•	PostgreSQL (running locally or a remote instance)
-	•	A valid OpenRouter API key
-
-⸻
-
+•	Node.js (v18 or later)
+•	npm
+•	PostgreSQL (local or remote)
+•	OpenRouter API key (Get it here)
+Installation & Setup
 1. Clone the Repository
-
 git clone <repository-url>
 cd movie-recommender
-
-
-⸻
-
 2. Backend Setup
-	1.	Open a terminal in the backend folder:
-
+Navigate to backend folder:
 cd backend
-
-	2.	Install dependencies:
-
+Install dependencies:
 npm install
-
-	3.	Create a .env file in the backend folder and add:
-
+Create .env file in the backend folder:
 OPENROUTER_API_KEY=your_api_key_here
-DATABASE_URL=postgresql://username@localhost:5432/movie_recommendation
+DATABASE_URL=postgresql://username:password@localhost:5432/movie_recommendation
 PORT=5001
 SITE_URL=http://localhost:3000
-
-	4.	Start the backend server:
-
+Start the backend server:
 npm start
-
-The backend will run on:
-
-http://localhost:5001
-
-
-⸻
-
+Backend will run on: http://localhost:5001
 3. Frontend Setup
-	1.	Open a new terminal in the frontend folder:
-
+Open a new terminal and navigate to frontend folder:
 cd frontend
-
-	2.	Install dependencies:
-
+Install dependencies:
 npm install
-
-	3.	Start the frontend:
-
+Start the frontend:
 npm start
-
-The frontend will run on:
-
-http://localhost:3000
-
-
-⸻
-
-4. Usage
-	•	Enter a movie preference in the input field
-	•	Submit to receive AI-generated movie recommendations
-	•	Recent searches are stored in PostgreSQL and can be retrieved via the backend API
+Frontend will run on: http://localhost:3000
+Usage
+1.	Open http://localhost:3000 in your browser
+2.	Enter your movie preference (e.g., "action movies with a strong female lead")
+3.	Select how many movie suggestions you want (1-10)
+4.	Click "Get Recommendations"
+5.	View AI-generated movie recommendations with title, year, genre, and description
+API Endpoints
+POST /api/recommendations
+Generate and save movie recommendations
+Request Body:
+{
+  "user_input": "sci-fi movies",
+  "movie_count": 5
+}
+Response:
+{
+  "movies": [
+    {
+      "title": "Inception",
+      "year": "2010",
+      "genre": "Sci-Fi",
+      "description": "A thief who steals corporate secrets..."
+    }
+  ]
+}
+GET /api/recommendations
+Retrieve last 10 recommendations from database
+Response:
+[
+  {
+    "id": 1,
+    "user_input": "sci-fi movies",
+    "recommended_movies": [...],
+    "movie_count": 5,
+    "timestamp": "2024-01-01T00:00:00.000Z"
+  }
+]
+Database Schema
+CREATE TABLE recommendations (
+  id SERIAL PRIMARY KEY,
+  user_input TEXT NOT NULL,
+  recommended_movies TEXT NOT NULL,
+  movie_count INTEGER DEFAULT 5,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Environment Variables
+Backend (.env):
+•	OPENROUTER_API_KEY - Your OpenRouter API key
+•	DATABASE_URL - PostgreSQL connection string
+•	PORT - Backend server port (default: 5001)
+•	SITE_URL - Frontend URL for CORS
+Deployment
+Backend Deployment (Render)
+1.	Create a new Web Service on Render
+2.	Connect your GitHub repository
+3.	Set environment variables in Render dashboard
+4.	Deploy
+Frontend Deployment (Vercel/Netlify)
+1.	Build the frontend: npm run build
+2.	Deploy the build folder to Vercel or Netlify
+3.	Update API URL in App.js to your deployed backend URL
+Troubleshooting
+Port Already in Use:
+lsof -ti:5001
+kill -9 $(lsof -ti:5001)
+PostgreSQL Connection Error:
+•	Verify DATABASE_URL is correct
+•	Check if PostgreSQL is running
+•	Ensure database exists
+API Key Error:
+•	Verify OPENROUTER_API_KEY in .env file
+•	Check if API key is valid
+•	Ensure .env file is in backend folder
+Notes
+•	API key is stored securely in backend .env file
+•	Never commit .env file to Git (included in .gitignore)
+•	Free tier on Render may have cold starts
+•	OpenRouter API usage is billed separately
 
