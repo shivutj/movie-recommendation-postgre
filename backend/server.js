@@ -1,28 +1,37 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const sqlite3 = require("sqlite3").verbose();
+const { Pool } = require("pg");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-const db = new sqlite3.Database("./recommendations.db", (err) => {
-  if (err) {
-    console.error("Database connection error:", err);
-  } else {
-    console.log("Connected to SQLite database");
-  }
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
 });
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS recommendations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_input TEXT NOT NULL,
-    recommended_movies TEXT NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+pool
+  .connect()
+  .then((client) => {
+    console.log("Connected to PostgreSQL database");
+    return client.release();
+  })
+  .catch((err) => {
+    console.error("PostgreSQL connection error:", err);
+  });
+
+async function initializeDatabase() {
+  // Ensure the recommendations table exists on startup
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS recommendations (
+      id SERIAL PRIMARY KEY,
+      user_input TEXT NOT NULL,
+      recommended_movies TEXT NOT NULL,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
 
 app.post("/api/recommendations", async (req, res) => {
   const { user_input } = req.body;
@@ -86,14 +95,10 @@ app.post("/api/recommendations", async (req, res) => {
     const movies = movieList.slice(0, 5);
     const moviesJson = JSON.stringify(movies);
 
-    db.run(
-      "INSERT INTO recommendations (user_input, recommended_movies) VALUES (?, ?)",
-      [user_input, moviesJson],
-      function (err) {
-        if (err) {
-          console.error("Database error:", err);
-        }
-      }
+    // Persist recommendation using PostgreSQL
+    await pool.query(
+      "INSERT INTO recommendations (user_input, recommended_movies) VALUES ($1, $2)",
+      [user_input, moviesJson]
     );
 
     res.json({ movies });
@@ -105,24 +110,31 @@ app.post("/api/recommendations", async (req, res) => {
   }
 });
 
-app.get("/api/recommendations", (req, res) => {
-  db.all(
-    "SELECT * FROM recommendations ORDER BY timestamp DESC LIMIT 10",
-    [],
-    (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: "Database error" });
-      }
-      const formattedRows = rows.map((row) => ({
-        ...row,
-        recommended_movies: JSON.parse(row.recommended_movies),
-      }));
-      res.json(formattedRows);
-    }
-  );
+app.get("/api/recommendations", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT * FROM recommendations ORDER BY timestamp DESC LIMIT 10"
+    );
+    const formattedRows = rows.map((row) => ({
+      ...row,
+      recommended_movies: JSON.parse(row.recommended_movies),
+    }));
+    res.json(formattedRows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+initializeDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to initialize database:", err);
+    process.exit(1);
+  });
