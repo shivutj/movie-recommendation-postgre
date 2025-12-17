@@ -5,7 +5,6 @@ A full-stack MERN application that provides AI-powered movie recommendations usi
 ## Features
 
 - AI-powered movie recommendations based on user preferences
-- Customizable number of suggestions (1-10 movies)
 - PostgreSQL database to store recommendation history
 - Clean and simple UI
 - RESTful API with Express.js
@@ -99,8 +98,7 @@ Frontend will run on: `http://localhost:3000`
 ## Usage
 
 1. Open `http://localhost:3000` in your browser
-2. Enter your movie preference (e.g., "action movies with a strong female lead")
-3. Select how many movie suggestions you want (1-10)
+2. Enter your movie preference (e.g., "Superhero movies in india ")
 4. Click "Get Recommendations"
 5. View AI-generated movie recommendations with title, year, genre, and description
 
@@ -130,9 +128,6 @@ Generate and save movie recommendations
   ]
 }
 ```
-
-### GET /api/recommendations
-Retrieve last 10 recommendations from database
 
 **Response:**
 ```json
